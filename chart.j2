@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/{{ version }}/echarts.min.js"></script>
+</head>
+<body>
+    <div id="main" style="min-width: 100vw; min-height: 100vh;"></div>
+    <script type="text/javascript">
+        var chart = echarts.init(document.getElementById('main'));
+        chart.setOption({{ opt }});
+    </script>
+</body>
+</html>
