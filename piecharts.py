@@ -7,6 +7,7 @@ import webbrowser
 from tempfile import NamedTemporaryFile
 from collections import defaultdict
 import json
+from datetime import datetime, date, time
 
 
 # pylint: disable=redefined-builtin
@@ -60,6 +61,28 @@ def _merge_layout(x, y):
         x['shapes'] += z['shapes']
     z.update(x)
     return z
+
+
+def is_number(x):
+    try:
+        float(x)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+def is_datetime(x):
+    return isinstance(x, (datetime, date, time))
+
+
+def check_type(x):
+    """Simple heuristic."""
+    if is_number(x):
+        return 'value'
+    elif is_datetime(x):
+        return 'time'
+    return 'category'
+
 
 
 def _try_pydatetime(x):
@@ -561,8 +584,14 @@ def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=
     else:
         x = _try_pydatetime(x)
     x = np.atleast_1d(x)
+    # print(x.dtype)
+    # print(x[0])
+    # import wdb
+    # wdb.set_trace()
     y = np.atleast_1d(y)
     assert x.shape[0] == y.shape[0]
+    xtype = check_type(x[0])
+    ytype = check_type(y[0])
     # if y.ndim == 2:
     #     if not hasattr(label, '__iter__'):
     #         if label is None:
@@ -581,12 +610,13 @@ def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=
     return Chart(dict(
         xAxis=[
             dict(
-                type='value',
+                # type='value',
+                type=xtype,
             )
         ],
         yAxis=[
             dict(
-                type='value',
+                type=ytype,
             )
         ],
         series=dict(
@@ -594,4 +624,3 @@ def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=
             data=np.stack((x, y)).T
         )
     ))
-
