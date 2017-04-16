@@ -498,7 +498,7 @@ class Chart(object):
         html = env.get_template('chart.j2')
         return html.render(
             version=ECHARTS_VERSION,
-            opt=jdumps(self.chart)
+            options=jdumps(self.chart)
         )
 
     def show(self):
