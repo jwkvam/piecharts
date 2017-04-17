@@ -559,9 +559,9 @@ class Chart(object):
         # return filename
 
 
-def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=None,
-         mode='lines+markers', yaxis=1, fill=None, text="",
-         markersize=6):
+def _simple_chart(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=None,
+                  mode='lines+markers', yaxis=1, fill=None, text='', style='line',
+                  markersize=6):
     """Draws connected dots.
 
     Parameters
@@ -610,7 +610,6 @@ def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=
     return Chart(dict(
         xAxis=[
             dict(
-                # type='value',
                 type=xtype,
             )
         ],
@@ -620,7 +619,60 @@ def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=
             )
         ],
         series=dict(
-            type='line',
+            type=style,
             data=np.stack((x, y)).T
         )
     ))
+
+def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=None,
+         mode='lines+markers', yaxis=1, fill=None, text="", style='line',
+         markersize=6):
+    return _simple_chart(
+        x=x,
+        y=y,
+        label=label,
+        color=color,
+        width=width,
+        dash=dash,
+        opacity=opacity,
+        mode=mode,
+        yaxis=yaxis,
+        fill=fill,
+        text=text,
+        style=style,
+        markersize=markersize
+    )
+
+
+
+def bar(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=None,
+        mode='lines+markers', yaxis=1, fill=None, text="", style='bar',
+        markersize=6):
+    """Draws connected dots.
+
+    Parameters
+    ----------
+    x : array-like, optional
+    y : array-like, optional
+    label : array-like, optional
+
+    Returns
+    -------
+    Chart
+
+    """
+    return _simple_chart(
+        x=x,
+        y=y,
+        label=label,
+        color=color,
+        width=width,
+        dash=dash,
+        opacity=opacity,
+        mode=mode,
+        yaxis=yaxis,
+        fill=fill,
+        text=text,
+        style=style,
+        markersize=markersize
+    )
