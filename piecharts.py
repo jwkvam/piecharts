@@ -146,12 +146,15 @@ class Chart(object):
         # self.figure_ = None
 
     def __add__(self, other):
-        self.data += other.data
-        self.layout = _merge_layout(self.layout, other.layout)
+        self.chart['series'] += other.chart['series']
+        # self.layout = _merge_layout(self.layout, other.layout)
         return self
 
     def __radd__(self, other):
         return self.__add__(other)
+
+    def animation(self, enable):
+        self.chart['animation'] = enable
 
     def width(self, value):
         """Sets the width of the plot in pixels.
@@ -220,10 +223,10 @@ class Chart(object):
         Chart
 
         """
-        self.layout['xaxis']['title'] = label
+        self.chart['xAxis'][0]['name'] = label
         return self
 
-    def ylabel(self, label, index=1):
+    def ylabel(self, label):
         """Sets the y-axis title.
 
         Parameters
@@ -238,23 +241,7 @@ class Chart(object):
         Chart
 
         """
-        self.layout['yaxis' + str(index)]['title'] = label
-        return self
-
-    def zlabel(self, label):
-        """Sets the z-axis title.
-
-        Parameters
-        ----------
-        value : str
-            Label for the z-axis
-
-        Returns
-        -------
-        Chart
-
-        """
-        self.layout['zaxis']['title'] = label
+        self.chart['yAxis'][0]['name'] = label
         return self
 
     def xtickangle(self, angle):
