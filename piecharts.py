@@ -207,21 +207,6 @@ class Chart(object):
         self.layout['barmode'] = 'stack'
         return self
 
-    def legend(self, visible=True):
-        """Make legend visible.
-
-        Parameters
-        ----------
-        visible : bool, optional
-
-        Returns
-        -------
-        Chart
-
-        """
-        self.layout['showlegend'] = visible
-        return self
-
     def xlabel(self, label):
         """Sets the x-axis title.
 
@@ -473,6 +458,14 @@ class Chart(object):
         """
         self.layout['yaxis' + str(index)]['side'] = 'right'
 
+    def tooltip(self, show=True):
+        self.chart['tooltip']['show'] = show
+
+    def legend(self, show=True):
+        self.chart['legend']['show'] = show
+        labels = [s['name'] for s in self.chart['series']]
+        self.chart['legend']['data'] = labels
+
     def title(self, string):
         """Sets the title of the plot.
 
@@ -559,7 +552,7 @@ class Chart(object):
         # return filename
 
 
-def _simple_chart(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=None,
+def _simple_chart(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=None,
                   mode='lines+markers', yaxis=1, fill=None, text='', style='line',
                   markersize=6):
     """Draws connected dots.
@@ -584,28 +577,10 @@ def _simple_chart(x=None, y=None, label=None, color=None, width=None, dash=None,
     else:
         x = _try_pydatetime(x)
     x = np.atleast_1d(x)
-    # print(x.dtype)
-    # print(x[0])
-    # import wdb
-    # wdb.set_trace()
     y = np.atleast_1d(y)
     assert x.shape[0] == y.shape[0]
     xtype = check_type(x[0])
     ytype = check_type(y[0])
-    # if y.ndim == 2:
-    #     if not hasattr(label, '__iter__'):
-    #         if label is None:
-    #             label = _labels()
-    #         else:
-    #             label = _labels(label)
-    #     data = [go.Scatter(x=x, y=yy, name=ll, line=lineattr, mode=mode, text=text,
-    #                        fill=fill, opacity=opacity, yaxis=yn, marker=dict(size=markersize))
-    #             for ll, yy in zip(label, y.T)]
-    # else:
-    #     data = [go.Scatter(x=x, y=y, name=label, line=lineattr, mode=mode, text=text,
-    #                        fill=fill, opacity=opacity, yaxis=yn, marker=dict(size=markersize))]
-    # if yaxis == 1:
-    #     return Chart(data=data)
 
     return Chart(dict(
         xAxis=[
@@ -618,19 +593,20 @@ def _simple_chart(x=None, y=None, label=None, color=None, width=None, dash=None,
                 type=ytype,
             )
         ],
-        series=dict(
+        series=[dict(
             type=style,
+            name=name,
             data=np.stack((x, y)).T
-        )
+        )]
     ))
 
-def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=None,
+def line(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=None,
          mode='lines+markers', yaxis=1, fill=None, text="", style='line',
          markersize=6):
     return _simple_chart(
         x=x,
         y=y,
-        label=label,
+        name=name,
         color=color,
         width=width,
         dash=dash,
@@ -645,7 +621,7 @@ def line(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=
 
 
 
-def bar(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=None,
+def bar(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=None,
         mode='lines+markers', yaxis=1, fill=None, text="", style='bar',
         markersize=6):
     """Draws connected dots.
@@ -654,7 +630,7 @@ def bar(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=N
     ----------
     x : array-like, optional
     y : array-like, optional
-    label : array-like, optional
+    name : array-like, optional
 
     Returns
     -------
@@ -664,7 +640,40 @@ def bar(x=None, y=None, label=None, color=None, width=None, dash=None, opacity=N
     return _simple_chart(
         x=x,
         y=y,
-        label=label,
+        name=name,
+        color=color,
+        width=width,
+        dash=dash,
+        opacity=opacity,
+        mode=mode,
+        yaxis=yaxis,
+        fill=fill,
+        text=text,
+        style=style,
+        markersize=markersize
+    )
+
+
+def scatter(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=None,
+        mode='lines+markers', yaxis=1, fill=None, text="", style='scatter',
+        markersize=6):
+    """Draws connected dots.
+
+    Parameters
+    ----------
+    x : array-like, optional
+    y : array-like, optional
+    name : array-like, optional
+
+    Returns
+    -------
+    Chart
+
+    """
+    return _simple_chart(
+        x=x,
+        y=y,
+        name=name,
         color=color,
         width=width,
         dash=dash,
