@@ -3,6 +3,7 @@
 from __future__ import division
 
 import os
+import uuid
 import webbrowser
 from tempfile import NamedTemporaryFile
 from collections import defaultdict
@@ -84,7 +85,6 @@ def check_type(x):
     return 'category'
 
 
-
 def _try_pydatetime(x):
     """Opportunistically try to convert to pandas time indexes
     since plotly doesn't know how to handle them.
@@ -94,6 +94,7 @@ def _try_pydatetime(x):
     except AttributeError:
         pass
     return x
+
 
 def json_conversion(obj):
     """Encode additional objects to JSON."""
@@ -491,7 +492,7 @@ class Chart(object):
     @property
     def _html(self):
         env = Environment(
-            loader=FileSystemLoader(os.path.dirname(__file__)),
+            loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
             trim_blocks=True,
             lstrip_blocks=True
         )
@@ -506,11 +507,36 @@ class Chart(object):
 
     def show(self):
         # TODO notebook integration
-        with NamedTemporaryFile(prefix='echarts', suffix='.html', mode='w+', delete=False) as f:
-            f.write(self._html)
-            fname = f.name
-        webbrowser.open('file://' + fname)
+        is_notebook = _detect_notebook()
+        if not is_notebook:
+            with NamedTemporaryFile(prefix='echarts', suffix='.html', mode='w+', delete=False) as f:
+                f.write(self._html)
+                fname = f.name
+            webbrowser.open('file://' + fname)
 
+        else:
+            div = """
+<div id="{chartid}" style="width:800px; height:535px;"></div>
+<script>
+    require.config({{
+         paths:{{
+            echarts: '//cdnjs.cloudflare.com/ajax/libs/echarts/3.5.3/echarts.min'
+         }}
+    }});
+    require(['echarts'],function(ec){{
+    var myChart = ec.init(document.getElementById("{chartid}"));
+                var options = {options};
+                myChart.setOption(options);
+    }});
+</script>
+"""
+            divid = uuid.uuid4()
+            data = div.format(
+                chartid=divid,
+                options=jdumps(self.chart)
+            )
+            from IPython.display import Javascript, HTML, display
+            return HTML(data)
 
         # is_notebook = _detect_notebook()
         # kargs = {}
@@ -527,16 +553,18 @@ class Chart(object):
         # self.figure_ = go.Figure(data=self.data, layout=go.Layout(**self.layout))
         # plot(self.figure_, show_link=show_link, **kargs)
 
-    def save(self, filename=None, show_link=True, auto_open=False,
-             output='file', plotlyjs=True):
-        pass
-        # if filename is None:
-        #     filename = NamedTemporaryFile(prefix='plotly', suffix='.html', delete=False).name
-        # self.figure_ = go.Figure(data=self.data, layout=go.Layout(**self.layout))
-        # # NOTE: this doesn't work for output 'div'
-        # py.plot(self.figure_, show_link=show_link, filename=filename, auto_open=auto_open,
-        #         output_type=output, include_plotlyjs=plotlyjs)
-        # return filename
+    def save(self, filename=None, output='file', plotlyjs=True):
+        # if
+        with NamedTemporaryFile(prefix='echarts', suffix='.html', mode='w+', delete=False) as f:
+            f.write(self._html)
+            fname = f.name
+        if filename is None:
+            filename = NamedTemporaryFile(prefix='plotly', suffix='.html', delete=False).name
+        self.figure_ = go.Figure(data=self.data, layout=go.Layout(**self.layout))
+        # NOTE: this doesn't work for output 'div'
+        py.plot(self.figure_, show_link=show_link, filename=filename, auto_open=auto_open,
+                output_type=output, include_plotlyjs=plotlyjs)
+        return filename
 
 
 def _simple_chart(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=None,
