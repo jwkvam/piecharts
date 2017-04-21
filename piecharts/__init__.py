@@ -137,14 +137,14 @@ class Chart(object):
             data = {}
         self.chart = _recursive_dict(data)
         # self.repr_plot = repr_plot
-        # self.data = data
-        # if data is None:
-        #     self.data = []
-        # self.layout = layout
-        # if layout is None:
-        #     layout = {}
-        # self.layout = _recursive_dict(layout)
-        # self.figure_ = None
+
+        # sensible defaults
+        self.chart['toolbox']['feature']['dataZoom']['show'] = True
+        self.chart['toolbox']['feature']['dataZoom']['title'] = 'Zoom'
+        self.chart['toolbox']['feature']['saveAsImage']['show'] = True
+        self.chart['toolbox']['feature']['saveAsImage']['title'] = 'Save'
+        self.chart['tooltip']['show'] = True
+        self.tooltip()
 
     def __add__(self, other):
         self.chart['series'] += other.chart['series']
@@ -382,10 +382,11 @@ class Chart(object):
         Chart
 
         """
-        self.layout['xaxis']['range'] = [low, high]
+        self.chart['xAxis'][0]['min'] = low
+        self.chart['xAxis'][0]['max'] = high
         return self
 
-    def ylim(self, low, high, index=1):
+    def ylim(self, low, high):
         """Set yaxis limits
 
         Parameters
@@ -399,7 +400,8 @@ class Chart(object):
         Chart
 
         """
-        self.layout['yaxis' + str(index)]['range'] = [low, high]
+        self.chart['yAxis'][0]['min'] = low
+        self.chart['yAxis'][0]['max'] = high
         return self
 
     def xdtick(self, dtick):
@@ -411,43 +413,21 @@ class Chart(object):
         return self
 
     def xnticks(self, nticks):
-        self.layout['xaxis']['nticks'] = nticks
+        self.chart['xAxis'][0]['splitNumber'] = nticks
         return self
 
-    def ynticks(self, nticks, index=1):
-        self.layout['yaxis' + str(index)]['nticks'] = nticks
+    def ynticks(self, nticks):
+        self.chart['yAxis'][0]['splitNumber'] = nticks
         return self
-
-    def yaxis_left(self, index=1):
-        """Puts the yaxis on the left hand side
-
-        Parameters
-        ----------
-        index : int, optional
-
-        Returns
-        -------
-        Chart
-
-        """
-        self.layout['yaxis' + str(index)]['side'] = 'left'
-
-    def yaxis_right(self, index=1):
-        """Puts the yaxis on the right hand side
-
-        Parameters
-        ----------
-        index : int, optional
-
-        Returns
-        -------
-        Chart
-
-        """
-        self.layout['yaxis' + str(index)]['side'] = 'right'
 
     def tooltip(self, show=True):
         self.chart['tooltip']['show'] = show
+
+    def tooltip_item(self):
+        self.chart['tooltip']['trigger'] = 'item'
+
+    def tooltip_axis(self):
+        self.chart['tooltip']['trigger'] = 'axis'
 
     def legend(self, show=True):
         self.chart['legend']['show'] = show
@@ -496,8 +476,6 @@ class Chart(object):
             trim_blocks=True,
             lstrip_blocks=True
         )
-
-        print(jdumps(self.chart))
 
         html = env.get_template('chart.j2')
         return html.render(
@@ -558,12 +536,12 @@ class Chart(object):
         with NamedTemporaryFile(prefix='echarts', suffix='.html', mode='w+', delete=False) as f:
             f.write(self._html)
             fname = f.name
-        if filename is None:
-            filename = NamedTemporaryFile(prefix='plotly', suffix='.html', delete=False).name
-        self.figure_ = go.Figure(data=self.data, layout=go.Layout(**self.layout))
+        # if filename is None:
+        #     filename = NamedTemporaryFile(prefix='plotly', suffix='.html', delete=False).name
+        # self.figure_ = go.Figure(data=self.data, layout=go.Layout(**self.layout))
         # NOTE: this doesn't work for output 'div'
-        py.plot(self.figure_, show_link=show_link, filename=filename, auto_open=auto_open,
-                output_type=output, include_plotlyjs=plotlyjs)
+        # py.plot(self.figure_, show_link=show_link, filename=filename, auto_open=auto_open,
+        #         output_type=output, include_plotlyjs=plotlyjs)
         return filename
 
 
@@ -672,6 +650,39 @@ def bar(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=No
 def scatter(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=None,
         mode='lines+markers', yaxis=1, fill=None, text="", style='scatter',
         markersize=6):
+    """Draws connected dots.
+
+    Parameters
+    ----------
+    x : array-like, optional
+    y : array-like, optional
+    name : array-like, optional
+
+    Returns
+    -------
+    Chart
+
+    """
+    return _simple_chart(
+        x=x,
+        y=y,
+        name=name,
+        color=color,
+        width=width,
+        dash=dash,
+        opacity=opacity,
+        mode=mode,
+        yaxis=yaxis,
+        fill=fill,
+        text=text,
+        style=style,
+        markersize=markersize
+    )
+
+
+def heatmap(x=None, y=None, name=None, color=None, width=None, dash=None, opacity=None,
+            mode='lines+markers', yaxis=1, fill=None, text="", style='heatmap',
+            markersize=6):
     """Draws connected dots.
 
     Parameters
